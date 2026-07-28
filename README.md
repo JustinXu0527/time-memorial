@@ -207,6 +207,98 @@
 
 ---
 
+## 📦 安装与运行指南
+
+### 环境要求
+
+- **Node.js** >= 18.x（推荐使用 20.x LTS）
+- **npm** >= 9.x（随 Node.js 一起安装）
+- **Windows** 10 / 11（当前仅支持 Windows 平台）
+
+### 克隆项目
+
+```bash
+git clone https://github.com/你的用户名/time-memorial.git
+cd time-memorial
+```
+
+> 仓库中不包含 `.npm-cache`、`data`、`dist`、`node_modules` 文件夹，克隆后需要自行安装依赖。
+
+### 安装依赖
+
+```bash
+npm install
+```
+
+此命令会根据 `package.json` 和 `package-lock.json` 自动安装所有依赖，包括：
+
+| 依赖               | 用途               |
+| ------------------ | ------------------ |
+| `electron`         | 桌面应用框架       |
+| `electron-builder` | 打包构建工具       |
+| `mammoth`          | .docx 聊天记录解析 |
+| `xlsx`             | .xlsx 聊天记录解析 |
+| `pdf-parse`        | PDF 聊天记录解析   |
+
+> 安装 Electron 时可能会因网络问题下载失败，建议配置国内镜像：
+>
+> ```bash
+> npm config set electron_mirror "https://npmmirror.com/mirrors/electron/"
+> ```
+
+### 开发运行
+
+```bash
+npm start
+```
+
+此命令会启动 Electron 应用窗口。首次启动后会进入密码设置页面，设置完成后即可正常使用。
+
+### 打包构建
+
+构建 Windows 安装包和便携版：
+
+```bash
+npm run build:win
+```
+
+构建完成后，安装包和便携版会输出到 `dist/` 目录：
+
+| 文件                         | 说明                                            |
+| ---------------------------- | ----------------------------------------------- |
+| `时光纪念册 Setup x.x.x.exe` | NSIS 安装程序，可选择安装路径、创建桌面快捷方式 |
+| `时光纪念册 x.x.x.exe`       | 便携版，无需安装，双击即可运行                  |
+
+如需构建全平台版本，可使用：
+
+```bash
+npm run build
+```
+
+### 项目结构
+
+```
+time-memorial/
+├── assets/              # 应用图标等资源
+├── src/
+│   ├── main/            # Electron 主进程
+│   │   └── main.js
+│   └── renderer/        # 渲染进程（前端页面）
+│       ├── css/          # 样式文件
+│       ├── js/           # 脚本文件
+│       └── pages/        # 页面 HTML
+├── package.json         # 项目配置与依赖声明
+└── README.md
+```
+
+### 数据存储位置
+
+运行时数据存储在系统用户目录：
+
+```
+%APPDATA%/time-memorial/
+```
+
 ## 💡 使用建议
 
 1. **首次使用**：打开应用 → 设置启动密码 → 进入后点击「设置」→ 填写认识日期和她的生日 → 保存。
