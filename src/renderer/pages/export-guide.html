@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>时光纪念册 - 聊天记录导出方法</title>
+  <link rel="stylesheet" href="../css/common.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    /* 导航栏 */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      padding: 0 30px;
+      z-index: 100;
+    }
+
+    .navbar-logo {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .navbar-logo-icon {
+      font-size: 28px;
+      animation: heartBeat 2s ease-in-out infinite;
+    }
+
+    .navbar-nav {
+      display: flex;
+      gap: 8px;
+      margin-left: 50px;
+      flex: 1;
+    }
+
+    .nav-item {
+      padding: 8px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 14px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-gradient-start);
+      color: var(--primary);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-gradient-start);
+      cursor: pointer;
+      font-size: 18px;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-btn:hover {
+      background: var(--primary-light);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    /* 主内容区 */
+    .main-content {
+      padding-top: 80px;
+      padding-bottom: 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding-left: 30px;
+      padding-right: 30px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* 平台标签 */
+    .platform-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      padding: 16px 20px;
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border-radius: var(--border-radius);
+      box-shadow: var(--card-shadow);
+    }
+
+    .platform-tab {
+      padding: 10px 24px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 14px;
+      background: var(--bg-gradient-start);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 2px solid transparent;
+      font-weight: 500;
+    }
+
+    .platform-tab:hover {
+      border-color: var(--primary-light);
+    }
+
+    .platform-tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      border-color: transparent;
+    }
+
+    /* Markdown 内容卡片 */
+    .guide-card {
+      padding: 40px;
+    }
+
+    .guide-content h1 {
+      font-size: 2em;
+      margin: 0.67em 0;
+      padding-bottom: 0.3em;
+      border-bottom: 2px solid var(--bg-gradient-start);
+    }
+
+    .guide-content h2 {
+      font-size: 1.5em;
+      margin: 1.5em 0 0.5em;
+      padding-bottom: 0.25em;
+      border-bottom: 1px solid var(--bg-gradient-start);
+    }
+
+    .guide-content h3 {
+      font-size: 1.2em;
+      margin: 1.2em 0 0.4em;
+    }
+
+    .guide-content p {
+      margin: 0.8em 0;
+      line-height: 1.9;
+      color: var(--text-secondary);
+    }
+
+    .guide-content blockquote {
+      margin: 1em 0;
+      padding: 8px 16px;
+      border-left: 4px solid var(--primary);
+      background: var(--bg-gradient-start);
+      border-radius: 0 8px 8px 0;
+      color: var(--text-secondary);
+    }
+
+    .guide-content code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.9em;
+      color: var(--primary-dark);
+    }
+
+    .guide-content pre {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 16px 20px;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin: 1em 0;
+      line-height: 1.6;
+    }
+
+    .guide-content pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+      font-size: 14px;
+    }
+
+    .guide-content ul, .guide-content ol {
+      margin: 0.5em 0;
+      padding-left: 2em;
+      color: var(--text-secondary);
+      line-height: 1.9;
+    }
+
+    .guide-content li {
+      margin: 0.25em 0;
+    }
+
+    .guide-content a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .guide-content a:hover {
+      text-decoration: underline;
+    }
+
+    .guide-content img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin: 0.5em 0;
+    }
+
+    .guide-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .guide-content table th,
+    .guide-content table td {
+      border: 1px solid #e0e0e0;
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .guide-content table th {
+      background: var(--bg-gradient-start);
+      font-weight: 600;
+    }
+
+    .guide-content hr {
+      border: none;
+      border-top: 2px solid #f0f0f0;
+      margin: 1.5em 0;
+    }
+
+    .guide-content strong {
+      color: var(--text-primary);
+    }
+
+    .guide-content details {
+      margin: 1em 0;
+      padding: 8px 16px;
+      background: var(--bg-gradient-start);
+      border-radius: 8px;
+    }
+
+    .guide-content details summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-primary);
+      padding: 4px 0;
+    }
+
+    /* 教程网址卡片 */
+    .tutorial-url-card {
+      margin-top: 20px;
+      padding: 20px 24px;
+      background: linear-gradient(135deg, #fff5f7, #ffeef2);
+      border: 2px solid var(--primary-light);
+      border-radius: 14px;
+      text-align: center;
+    }
+
+    .tutorial-url-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .tutorial-url-link {
+      display: inline-block;
+      padding: 10px 24px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white !important;
+      border-radius: 25px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none !important;
+      transition: var(--transition);
+      box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+      word-break: break-all;
+    }
+
+    .tutorial-url-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <span class="navbar-logo-icon">💝</span>
+      时光纪念册
+    </div>
+    <div class="navbar-nav">
+      <div class="nav-item" onclick="navigateTo('index.html')">
+        <span>🏠</span> 首页
+      </div>
+      <div class="nav-item" onclick="navigateTo('diary.html')">
+        <span>📖</span> 日记
+      </div>
+      <div class="nav-item" onclick="navigateTo('album.html')">
+        <span>📸</span> 相册
+      </div>
+      <div class="nav-item" onclick="navigateTo('chat.html')">
+        <span>💬</span> 聊天记录
+      </div>
+      <div class="nav-item active nav-dropdown">
+        <span>📤</span> 导出方法
+        <div class="nav-dropdown-menu">
+          <div class="nav-dropdown-item" onclick="navigateTo('export-guide.html?platform=wechat')">
+            💬 微信
+          </div>
+          <div class="nav-dropdown-item" onclick="navigateTo('export-guide.html?platform=qq')">
+            🐧 QQ
+          </div>
+          <div class="nav-dropdown-item" onclick="navigateTo('export-guide.html?platform=douyin')">
+            🎵 抖音
+          </div>
+        </div>
+      </div>
+      <div class="nav-item" onclick="navigateTo('guide.html')">
+        <span>📖</span> 使用说明
+      </div>
+      <div class="nav-item" onclick="navigateTo('settings.html')">
+        <span>⚙️</span> 设置
+      </div>
+    </div>
+    <div class="navbar-right">
+      <button class="icon-btn" title="锁定" onclick="lockApp()">🔒</button>
+    </div>
+  </nav>
+
+  <!-- 主内容 -->
+  <div class="main-content">
+    <div class="page-title">📤 聊天记录导出方法</div>
+
+    <!-- 平台选择标签 -->
+    <div class="platform-tabs" id="platformTabs">
+      <div class="platform-tab" data-platform="wechat" onclick="switchPlatform('wechat')">
+        💬 微信
+      </div>
+      <div class="platform-tab" data-platform="qq" onclick="switchPlatform('qq')">
+        🐧 QQ
+      </div>
+      <div class="platform-tab" data-platform="douyin" onclick="switchPlatform('douyin')">
+        🎵 抖音
+      </div>
+    </div>
+
+    <!-- 教程网址卡片 -->
+    <div class="tutorial-url-card fade-in" id="tutorialUrlCard">
+      <div class="tutorial-url-label">📌 请先访问以下网址获取工具，再根据下方教程操作：</div>
+      <a class="tutorial-url-link" id="tutorialUrlLink" href="#" target="_blank"></a>
+    </div>
+
+    <!-- Markdown 内容 -->
+    <div class="card guide-card fade-in">
+      <div class="guide-content" id="guideContent"></div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <div>时光纪念册 v1.0.6</div>
+    <div>Made with 💔 by JustinXu</div>
+    <div>Copyright © 2024–2026 JustinXu. All rights reserved.</div>
+    <div>联系邮箱：<a href="mailto:2609878480@qq.com">2609878480@qq.com</a> ｜ GitHub：<a href="https://github.com/JustinXu0527/time-memorial" target="_blank">github.com/JustinXu0527/time-memorial</a></div>
+  </footer>
+
+  <script src="../js/common.js"></script>
+  <script>
+    const platformConfig = {
+      wechat: {
+        name: '微信',
+        icon: '💬',
+        url: 'https://gitee.com/starplatinum111/PyWxDump',
+        content: '' // Will be populated below
+      },
+      qq: {
+        name: 'QQ',
+        icon: '🐧',
+        url: 'https://github.com/shuakami/qq-chat-exporter',
+        content: ''
+      },
+      douyin: {
+        name: '抖音',
+        icon: '🎵',
+        url: 'https://github.com/TeamBreakerr/douyin-chat-export',
+        content: ''
+      }
+    };
+
+    let currentPlatform = 'wechat';
+
+    // 初始化
+    async function init() {
+      const settings = await getSettings();
+      applyTheme(settings.theme || 'sweet-pink');
+
+      // 配置 marked 渲染
+      if (typeof marked !== 'undefined') {
+        marked.setOptions({
+          breaks: true,
+          gfm: true,
+          headerIds: false,
+          mangle: false
+        });
+      }
+
+      // 从 URL 参数读取平台
+      const params = new URLSearchParams(window.location.search);
+      const platformParam = params.get('platform');
+      if (platformParam && platformConfig[platformParam]) {
+        currentPlatform = platformParam;
+      }
+
+      switchPlatform(currentPlatform);
+    }
+
+    function switchPlatform(platform) {
+      currentPlatform = platform;
+      const config = platformConfig[platform];
+
+      // 更新标签激活状态
+      document.querySelectorAll('.platform-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.platform === platform);
+      });
+
+      // 更新教程网址
+      const urlLink = document.getElementById('tutorialUrlLink');
+      urlLink.href = config.url;
+      urlLink.textContent = config.icon + ' ' + config.name + '教程网址：' + config.url;
+
+      // 渲染 Markdown 内容
+      const container = document.getElementById('guideContent');
+      if (typeof marked !== 'undefined') {
+        container.innerHTML = marked.parse(config.content);
+      } else {
+        container.innerHTML = '<p style="color:var(--text-light);">内容加载中...</p>';
+      }
+    }
+
+    function lockApp() {
+      window.location.href = 'login.html';
+    }
+
+    // ========== 微信聊天记录导出方法 ==========
+    platformConfig.wechat.content = `# 微信聊天记录导出方法
+
+## 工具：PyWxDump
+
+PyWxDump 是一款开源的微信聊天记录导出工具，基于 Python 开发，可以直接读取和解密本机微信的聊天记录数据库。
+
+### 功能介绍
+
+* 获取微信昵称、微信号、手机号、邮箱、数据库解密密钥
+* 支持解密微信聊天记录数据库
+* 支持导出聊天记录为 HTML、CSV 等格式
+* 支持查看聊天记录中的图片、语音、视频等多媒体内容
+* 支持多账户切换
+
+### 使用步骤
+
+#### 1. 安装 Python
+
+首先需要在电脑上安装 Python 3.x 版本。建议从 [python.org](https://www.python.org/) 下载安装，安装时勾选"Add Python to PATH"。
+
+#### 2. 安装 PyWxDump
+
+打开命令提示符（CMD）或 PowerShell，执行以下命令：
+
+\`\`\`shell
+pip install pywxdump
+\`\`\`
+
+如果安装速度较慢，可以使用国内镜像源：
+
+\`\`\`shell
+pip install pywxdump -i https://pypi.tuna.tsinghua.edu.cn/simple
+\`\`\`
+
+#### 3. 确保微信已登录
+
+在电脑上打开微信并保持登录状态，PyWxDump 需要读取正在运行中的微信进程内存来获取解密密钥。
+
+> **注意：** 微信必须处于登录状态才能获取数据库密钥。如果微信未登录或刚关闭，请重新登录后再操作。
+
+#### 4. 导出聊天记录
+
+在命令提示符中执行：
+
+\`\`\`shell
+wxdump all
+\`\`\`
+
+此命令会自动获取微信信息、解密数据库并导出聊天记录。
+
+你还可以单独使用以下命令：
+
+\`\`\`shell
+# 获取微信信息（昵称、账号、手机号、密钥等）
+wxdump info
+
+# 获取微信文件夹路径
+wxdump db_path
+
+# 解密微信数据库
+wxdump decrypt -k <密钥> -i <数据库路径> -o <输出路径>
+
+# 导出聊天记录为 HTML
+wxdump export -u <微信账号> -o <导出路径> -msg <MSG.db路径> -micro <MicroMsg.db路径> -media <MediaMSG.db路径>
+\`\`\`
+
+#### 5. 导入到时光纪念册
+
+导出完成后，在时光纪念册的「聊天记录」页面点击「导入聊天记录」，选择对应平台（微信），然后选择导出的 HTML 或 CSV 文件即可。
+
+### 注意事项
+
+* 本项目仅供学习交流和个人备份使用，请勿用于非法用途
+* 所有读取和解析都在你自己的电脑上完成，不会上传数据到任何服务器
+* 如果遇到问题，可以在项目 Gitee 页面提交 Issues
+`;
+
+    // ========== QQ聊天记录导出方法 ==========
+    platformConfig.qq.content = `# QQ 聊天记录导出方法
+
+## 工具：qq-chat-exporter (QCE)
+
+这是一个帮你把 QQ 聊天记录导出到本地的工具。把它下载到你自己的电脑上，就能直接读取并保存好友和群聊的记录。
+
+它不仅可以导出 HTML、JSON、TXT 和 Excel 等各种你需要的格式，还可以将聊天中发过的图片、视频和表情文件一并下载到本地保存。最重要的是，所有读取和解析都在你自己的电脑上完成，项目没有服务器或数据传输，不会把你的聊天记录上传到任何地方。
+
+### 快速开始
+
+#### Windows 一键安装（推荐）
+
+1. 从 [Releases 页面](https://github.com/shuakami/qq-chat-exporter/releases) 下载一键安装包并运行
+2. 用 QQ 扫码登录
+3. 打开 \`http://localhost:40653/qce\`，开始导出
+
+#### Shell 模式（Windows / Linux）
+
+1. 从 [Releases 页面](https://github.com/shuakami/qq-chat-exporter/releases) 下载对应平台的压缩包
+2. 运行 \`launcher-user.bat\`（Windows）或 \`./launcher-user.sh\`（Linux）
+3. 用 QQ 扫码登录，复制控制台输出的 Token
+4. 打开 \`http://localhost:40653/qce\`
+
+#### Docker 一键部署
+
+适用于 macOS（含 Apple Silicon）、Linux、Windows，无需安装 QQ 客户端：
+
+\`\`\`bash
+git clone https://github.com/shuakami/qq-chat-exporter.git
+cd qq-chat-exporter/docker
+docker compose up -d
+
+# 查看登录二维码与 Token
+docker logs -f napcat-qce
+\`\`\`
+
+> **注意：** Apple Silicon (M1/M2/M3/M4) 通过 Rosetta 模拟运行，首次启动可能稍慢。
+
+### 功能特性
+
+* 支持导出为 HTML / JSON / TXT / Excel 格式
+* 支持导出聊天中的图片、视频和表情文件
+* 现代化 Web 查看器，可搜索和浏览聊天记录
+* 会话导出和资源画廊功能
+* 全部本地处理，不经过任何服务器
+
+### 导入到时光纪念册
+
+导出完成后，在时光纪念册的「聊天记录」页面点击「导入聊天记录」，选择 QQ 平台，然后选择导出的 HTML 或 JSON 文件即可。
+
+### 注意事项
+
+* 本工具仅用于导出**自己的**聊天记录备份，请勿用于非法用途
+* QQ 可能随时更改协议导致工具失效
+* 更多问题请参考项目 [文档](https://shuakami.github.io/qq-chat-exporter/)
+`;
+
+    // ========== 抖音聊天记录导出方法 ==========
+    platformConfig.douyin.content = `# 抖音聊天记录导出方法
+
+## 工具：douyin-chat-export
+
+从抖音网页版完整导出私信聊天记录，提供本地 Web 界面浏览、搜索和导出功能。
+
+直接调用抖音 IM 接口（protobuf）抓取，突破网页虚拟列表的滚动上限，可导出完整聊天历史。
+
+### 功能亮点
+
+**采集能力：**
+* **完整历史** — 直接调用抖音 IM API（protobuf），突破虚拟列表滚动上限
+* **增量更新** — 增量模式只抓新消息
+* **多种消息类型** — 文本、表情包、图片、语音、视频、分享（视频/商品/直播）、一起看视频、引用回复、系统消息
+
+**浏览功能（Vue 3 + FastAPI 内置界面）：**
+* 无限滚动、全文搜索、搜索结果一键跳转到原消息
+* 消息分组、引用回复区块、图片点击放大、语音/视频在线播放
+* 5 套主题一键切换（暗色 / 微信绿 / 浅色 / 暖棕 / 紫夜），全中文界面
+
+**媒体本地化：**
+* 图片 AES-GCM 解密 + HEIC 自动转 JPEG
+* 语音自动落地
+* 视频 MPEG-CENC 解密 + faststart 转封装
+* 可开关"新消息自动下载"与"回填历史媒体"
+
+**导出 & 运维：**
+* 导出 ChatLab 标准格式（JSON / JSONL），可直接做 AI 聊天分析
+* Web 控制面板：可视化采集 / 导出 / 定时任务 / 远程扫码登录 / 密码保护
+* 定时任务（cron）+ 失败推送到微信
+* Docker 一键部署，数据持久化
+
+### 快速开始（Docker 部署）
+
+已安装 Docker 即可，无需 clone 仓库、无需本地构建。新建一个目录，保存以下内容为 \`docker-compose.yml\`：
+
+\`\`\`yaml
+services:
+  douyin-chat-export:
+    image: ghcr.io/teambreakerr/douyin-chat-export:latest
+    container_name: douyin-chat-export
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+\`\`\`
+
+然后执行：
+
+\`\`\`bash
+docker compose up -d
+\`\`\`
+
+> **国内拉取 ghcr.io 缓慢或超时？** 把 \`image:\` 里的 \`ghcr.io\` 换成 \`ghcr.nju.edu.cn\`（南京大学镜像代理），其余不变。
+
+然后打开 \`http://localhost:8000/panel\` → **登录**（导入 Cookie 或远程扫码），采集完成后访问 \`http://localhost:8000\` 浏览。
+
+### 登录方式（三选一）
+
+1. **本地浏览器扫码** — 在宿主机运行登录脚本，弹出真实浏览器窗口扫码
+2. **Cookie 导入（推荐）** — 在任意浏览器登录抖音后导出 Cookie，粘贴导入到控制面板
+3. **控制面板远程扫码** — 通过截图远程操作容器内浏览器
+
+登录态保存在 \`data/browser_profile/\`，经 volume 持久化。
+
+### 采集与导出
+
+在控制面板可视化操作（增量/全量切换、勾选会话、实时日志），或用命令行：
+
+\`\`\`bash
+# 采集
+python3 extract.py                          # 全量采集所有会话
+python3 extract.py --filter "会话名称"        # 只采集指定会话
+python3 extract.py --filter "会话名称" --incremental   # 增量（只取新消息）
+
+# 导出为 ChatLab 格式（可直接做 AI 分析）
+python3 export.py --filter "会话名称"                    # JSONL（默认）
+python3 export.py --filter "会话名称" --format json      # JSON
+python3 export.py --filter "会话名称" --output data/export.jsonl
+\`\`\`
+
+### 导入到时光纪念册
+
+导出完成后，在时光纪念册的「聊天记录」页面点击「导入聊天记录」，选择对应平台导入 JSON 文件即可。
+
+### 注意事项
+
+* 本工具仅用于导出**自己的**聊天记录备份，请勿用于非法用途
+* 抖音可能随时更改接口导致工具失效
+* 媒体 CDN URL 有签名有效期（约 1 年），过期后未本地化的图片/表情将无法显示
+* 语音文件自动下载到本地，不受 CDN 过期影响
+`;
+
+    init();
+  </script>
+</body>
+</html>
